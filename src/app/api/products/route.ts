@@ -1,6 +1,5 @@
 // src/app/api/products/route.ts
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { productFormSchema } from '@/lib/validations/product';
 import { z } from 'zod';
@@ -9,7 +8,7 @@ import { v4 as uuidv4 } from 'uuid'; // For unique filenames
 // GET /api/products
 // Fetch all active products, with optional filtering and sorting
 export async function GET(req: Request) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminClient();
   const { searchParams } = new URL(req.url);
 
   const categoryId = searchParams.get('categoryId');
@@ -53,8 +52,8 @@ export async function GET(req: Request) {
 // POST /api/products
 // Add a new product, including image upload to Supabase Storage
 export async function POST(req: Request) {
-  const supabase = await createServerSupabaseClient(); // For DB operations
-  const supabaseAdmin = createAdminClient(); // For Storage operations (service_role)
+  const supabase = createAdminClient();
+  const supabaseAdmin = supabase;
 
   try {
     const formData = await req.formData();

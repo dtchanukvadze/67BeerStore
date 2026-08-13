@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { createBrowserClient } from '@/lib/supabase/client';
 import { Category } from '@/lib/types/models';
 import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -50,27 +49,23 @@ export default function ProductFilterSort({
   );
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
-  const supabase = createBrowserClient();
 
   useEffect(() => {
     async function fetchCategories() {
       setIsLoadingCategories(true);
-      const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('name', { ascending: true });
+      const response = await fetch('/api/categories');
 
-      if (error) {
-        console.error('Error fetching categories for filter:', error);
+      if (!response.ok) {
+        console.error('Error fetching categories for filter:', await response.text());
         toast.error('Failed to load categories for filtering.');
       } else {
-        setCategories(data || []);
+        setCategories(await response.json());
       }
       setIsLoadingCategories(false);
     }
 
     fetchCategories();
-  }, [supabase]);
+  }, []);
 
   const applyFilters = () => {
     onFilterChange({

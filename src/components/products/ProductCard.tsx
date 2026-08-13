@@ -39,8 +39,9 @@ export default function ProductCard({ product, onDelete, isDeleting }: ProductCa
         <Image
           src={product.image_url || defaultBeerImage}
           alt={product.name}
-          layout="fill"
-          objectFit="cover"
+          fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 25vw"
+          style={{ objectFit: "cover" }}
           className="rounded-t-lg"
           onError={(e) => {
             (e.target as HTMLImageElement).src = defaultBeerImage; // Fallback to default
@@ -72,11 +73,7 @@ export default function ProductCard({ product, onDelete, isDeleting }: ProductCa
               </Button>
             </Link>
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Button variant="outline" size="sm" className="bg-gray-700 text-gray-200 hover:bg-gray-600">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="bg-gray-700 text-gray-200 hover:bg-gray-600"><MoreHorizontal className="h-4 w-4" /></Button>} />
               <DropdownMenuContent align="end" className="w-48 bg-gray-800 border-gray-700 text-gray-200">
                 <Link href={`/products/${product.id}/edit`}>
                   <DropdownMenuItem className="cursor-pointer hover:bg-gray-700">

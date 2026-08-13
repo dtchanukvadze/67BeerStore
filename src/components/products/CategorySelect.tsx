@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createBrowserClient } from "@/lib/supabase/client";
 import type { Category } from "@/lib/types/models";
 import { toast } from "sonner";
 import LoadingSpinner from "../common/LoadingSpinner";
@@ -27,8 +26,6 @@ export default function CategorySelect({
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const supabase = useMemo(() => createBrowserClient(), []);
-
   useEffect(() => {
     let mounted = true;
 
@@ -36,16 +33,10 @@ export default function CategorySelect({
       setIsLoading(true);
 
       try {
-        const { data, error } = await supabase
-          .from("categories")
-          .select("*")
-          .eq("active", true)
-          .order("name", {
-            ascending: true,
-          });
+        const response = await fetch("/api/categories?active=true");
 
-        if (error) {
-          console.error("Error fetching categories:", error);
+        if (!response.ok) {
+          console.error("Error fetching categories:", await response.text());
 
           if (mounted) {
             toast.error("Failed to load categories.");
@@ -55,7 +46,7 @@ export default function CategorySelect({
         }
 
         if (mounted) {
-          setCategories(data ?? []);
+          setCategories(await response.json());
         }
       } catch (error) {
         console.error("Unexpected category error:", error);
@@ -75,7 +66,7 @@ export default function CategorySelect({
     return () => {
       mounted = false;
     };
-  }, [supabase]);
+  }, []);
 
   if (isLoading) {
     return <LoadingSpinner className="h-10" />;
@@ -84,6 +75,10 @@ export default function CategorySelect({
   return (
     <Select
       value={value ?? "none"}
+      items={[
+        { value: "none", label: "No Category" },
+        ...categories.map((category) => ({ value: category.id, label: category.name })),
+      ]}
       onValueChange={(newValue) => {
         if (newValue === "none") {
           onChange(null);

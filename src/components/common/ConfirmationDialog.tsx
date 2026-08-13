@@ -34,13 +34,7 @@ export default function ConfirmationDialog({
 }: ConfirmationDialogProps) {
   return (
     <AlertDialog>
-      <AlertDialogTrigger>
-        {typeof triggerText === 'string' ? (
-          <Button variant={variant}>{triggerText}</Button>
-        ) : (
-          triggerText
-        )}
-      </AlertDialogTrigger>
+      <AlertDialogTrigger render={typeof triggerText === 'string' ? <Button variant={variant}>{triggerText}</Button> : triggerText} />
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>

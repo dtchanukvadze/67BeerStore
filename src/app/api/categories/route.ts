@@ -1,6 +1,6 @@
 // src/app/api/categories/route.ts
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
 const categorySchema = z.object({
@@ -11,7 +11,7 @@ const categorySchema = z.object({
 // GET /api/categories
 // Fetch all categories for a given business
 export async function GET(req: Request) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminClient();
   const { searchParams } = new URL(req.url);
   const activeStatus = searchParams.get('active'); // 'true', 'false', or null/undefined for all
 
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 // POST /api/categories
 // Create a new category
 export async function POST(req: Request) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminClient();
 
   try {
     const body = await req.json();
