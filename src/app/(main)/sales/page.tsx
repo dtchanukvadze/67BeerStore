@@ -1,0 +1,6 @@
+"use client";
+import { useEffect, useState } from "react";
+import AppShell from "@/components/layout/AppShell";
+import { useBusinessId } from "@/components/common/BusinessGate";
+type Sale = { id: string; sale_number: number; payment_method: string; total_amount: number; created_at: string };
+export default function SalesPage() { const { businessId } = useBusinessId(); const [sales, setSales] = useState<Sale[]>([]); useEffect(() => { if (businessId) fetch(`/api/sales?businessId=${businessId}`).then(r => r.json()).then(setSales); }, [businessId]); return <AppShell><h2 className="text-3xl font-bold">Sales</h2><div className="mt-6 overflow-hidden rounded-xl border border-gray-800"><table className="w-full text-left"><thead className="bg-gray-900 text-gray-400"><tr><th className="p-3">Receipt</th><th>Date</th><th>Payment</th><th className="p-3 text-right">Total</th></tr></thead><tbody>{sales.map(s => <tr key={s.id} className="border-t border-gray-800"><td className="p-3">#{s.sale_number}</td><td>{new Date(s.created_at).toLocaleString()}</td><td className="capitalize">{s.payment_method.replace("_", " ")}</td><td className="p-3 text-right text-amber-500">₾{Number(s.total_amount).toFixed(2)}</td></tr>)}</tbody></table>{!sales.length && <p className="p-5 text-gray-400">No sales recorded yet.</p>}</div></AppShell>; }
