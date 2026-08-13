@@ -44,7 +44,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
     const { data: updatedCategory, error } = await supabase
       .from('categories')
-      .update(updatePayload)
+      .update(validatedData)
       .eq('id', categoryId)
       .select()
       .single();
