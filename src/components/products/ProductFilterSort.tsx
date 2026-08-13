@@ -17,7 +17,6 @@ import { toast } from 'react-hot-toast';
 import LoadingSpinner from '../common/LoadingSpinner';
 
 interface ProductFilterSortProps {
-  businessId: string;
   onFilterChange: (filters: {
     search: string;
     categoryId: string | null;
@@ -35,7 +34,6 @@ interface ProductFilterSortProps {
 }
 
 export default function ProductFilterSort({
-  businessId,
   onFilterChange,
   initialFilters,
 }: ProductFilterSortProps) {
@@ -60,7 +58,6 @@ export default function ProductFilterSort({
       const { data, error } = await supabase
         .from('categories')
         .select('*')
-        .eq('business_id', businessId)
         .order('name', { ascending: true });
 
       if (error) {
@@ -72,10 +69,8 @@ export default function ProductFilterSort({
       setIsLoadingCategories(false);
     }
 
-    if (businessId) {
-      fetchCategories();
-    }
-  }, [businessId, supabase]);
+    fetchCategories();
+  }, [supabase]);
 
   const applyFilters = () => {
     onFilterChange({

@@ -4,11 +4,9 @@ import { createAdminClient } from '@/lib/supabase/admin'; // Use admin client fo
 import { completeSaleSchema } from '@/lib/validations/sale';
 import { z } from 'zod';
 
-export async function GET(request: Request) {
-  const businessId = new URL(request.url).searchParams.get('businessId');
-  if (!businessId) return NextResponse.json({ message: 'Business ID is required.' }, { status: 400 });
+export async function GET() {
   const supabaseAdmin = createAdminClient();
-  const { data, error } = await supabaseAdmin.from('sales').select('id, sale_number, payment_method, total_amount, created_at').eq('business_id', businessId).order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await supabaseAdmin.from('sales').select('id, sale_number, payment_method, total_amount, created_at').order('created_at', { ascending: false }).limit(100);
   return error ? NextResponse.json({ message: error.message }, { status: 500 }) : NextResponse.json(data);
 }
 
@@ -20,11 +18,10 @@ export async function POST(req: Request) {
     // Validate request body using Zod
     const validatedData = completeSaleSchema.parse(body);
 
-    const { business_id, payment_method, cart_items } = validatedData;
+    const { payment_method, cart_items } = validatedData;
 
     // Call the Supabase RPC function for atomic sale creation
     const { data, error } = await supabaseAdmin.rpc('create_sale_transaction', {
-      p_business_id: business_id,
       p_payment_method: payment_method,
       p_cart_items: cart_items, // JSONB array is passed
     });

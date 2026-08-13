@@ -1,7 +1,7 @@
 // src/app/products/page.tsx
 'use client';
 
-import React, { Suspense, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,13 +9,11 @@ import ProductCard from '@/components/products/ProductCard';
 import ProductFilterSort from '@/components/products/ProductFilterSort';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
-import { createBrowserClient } from '@/lib/supabase/client';
 import { ProductWithCategory } from '@/lib/types/models';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 function ProductsContent() {
-  const supabase = useMemo(() => createBrowserClient(), []);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -23,7 +21,6 @@ function ProductsContent() {
   const [products, setProducts] = useState<ProductWithCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeletingProductId, setIsDeletingProductId] = useState<string | null>(null);
-  const [businessId, setBusinessId] = useState<string | null>(null);
 
   // State for filters, synchronized with URL params
   const [filters, setFilters] = useState({
@@ -34,28 +31,10 @@ function ProductsContent() {
     sortOrder: (searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc',
   });
 
-  // Fetch business ID once (assuming single business for this app)
-  useEffect(() => {
-    async function fetchBusiness() {
-      const { data, error } = await supabase.from('businesses').select('id').single();
-      if (error || !data) {
-        console.error('Error fetching business ID:', error);
-        toast.error('Failed to load business information.');
-        // Handle error: maybe redirect to an error page or show a retry option
-      } else {
-        setBusinessId(data.id);
-      }
-    }
-    fetchBusiness();
-  }, [supabase]);
-
   // Fetch products based on filters
   const fetchProducts = useCallback(async () => {
-    if (!businessId) return;
-
     setIsLoading(true);
     const params = new URLSearchParams();
-    params.set('businessId', businessId);
     if (filters.search) params.set('search', filters.search);
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.activeStatus !== 'all') params.set('activeStatus', filters.activeStatus);
@@ -78,27 +57,22 @@ function ProductsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [businessId, filters, router]);
+  }, [filters, router]);
 
 
   useEffect(() => {
-    if (!businessId) return;
     const timer = window.setTimeout(() => void fetchProducts(), 0);
     return () => window.clearTimeout(timer);
-  }, [businessId, fetchProducts]); // Refetch when businessId or filters change
+  }, [fetchProducts]);
 
   const handleFilterChange = useCallback((newFilters: typeof filters) => {
     setFilters(newFilters);
   }, []);
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!businessId) {
-      toast.error('Business ID not found. Cannot delete product.');
-      return;
-    }
     setIsDeletingProductId(productId);
     try {
-      const response = await fetch(`/api/products/${productId}?businessId=${businessId}`, {
+      const response = await fetch(`/api/products/${productId}`, {
         method: 'DELETE',
       });
 
@@ -117,10 +91,6 @@ function ProductsContent() {
     }
   };
 
-  if (!businessId) {
-    return <LoadingSpinner className="min-h-[calc(100vh-120px)]" />;
-  }
-
   return (
     <div className="container mx-auto py-8">
       <div className="flex items-center justify-between mb-6">
@@ -133,7 +103,6 @@ function ProductsContent() {
       </div>
 
       <ProductFilterSort
-        businessId={businessId}
         onFilterChange={handleFilterChange}
         initialFilters={filters}
       />

@@ -2,11 +2,9 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { ZodUUID } from '@/lib/validations/common';
 
 const categorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100, 'Category name cannot exceed 100 characters'),
-  business_id: ZodUUID,
   active: z.boolean().optional().default(true),
 });
 
@@ -15,18 +13,12 @@ const categorySchema = z.object({
 export async function GET(req: Request) {
   const supabase = await createServerSupabaseClient();
   const { searchParams } = new URL(req.url);
-  const businessId = searchParams.get('businessId');
   const activeStatus = searchParams.get('active'); // 'true', 'false', or null/undefined for all
-
-  if (!businessId) {
-    return NextResponse.json({ message: 'Business ID is required.' }, { status: 400 });
-  }
 
   try {
     let query = supabase
       .from('categories')
       .select('*')
-      .eq('business_id', businessId)
       .order('name', { ascending: true });
 
     if (activeStatus !== null) {

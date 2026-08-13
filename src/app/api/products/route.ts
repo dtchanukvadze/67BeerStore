@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { productFormSchema } from '@/lib/validations/product';
-import { ZodUUID } from '@/lib/validations/common';
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid'; // For unique filenames
 
@@ -13,22 +12,16 @@ export async function GET(req: Request) {
   const supabase = await createServerSupabaseClient();
   const { searchParams } = new URL(req.url);
 
-  const businessId = searchParams.get('businessId'); // Assuming business ID is passed
   const categoryId = searchParams.get('categoryId');
   const activeStatus = searchParams.get('active') ?? searchParams.get('activeStatus'); // 'true', 'false', or null/undefined for all
   const search = searchParams.get('search'); // Search by name or description
   const sortBy = searchParams.get('sortBy') || 'name'; // Default sort
   const sortOrder = searchParams.get('sortOrder') === 'desc' ? 'desc' : 'asc'; // Default asc
 
-  if (!businessId) {
-    return NextResponse.json({ message: 'Business ID is required.' }, { status: 400 });
-  }
-
   try {
     let query = supabase
       .from('products')
-      .select('*, categories(id, name)') // Select category details
-      .eq('business_id', businessId);
+      .select('*, categories(id, name)'); // Select category details
 
     if (categoryId) {
       query = query.eq('category_id', categoryId);
@@ -71,7 +64,6 @@ export async function POST(req: Request) {
     const category_id = formData.get('category_id') as string | null;
     const active = formData.get('active') === 'true';
     const image_file = formData.get('image_file') as File | null;
-    const business_id = formData.get('business_id') as string; // Required for all business data
 
     const parsedPrice = parseFloat(price); // Zod will re-validate
 
@@ -83,10 +75,9 @@ export async function POST(req: Request) {
       category_id: category_id || null, // Ensure category_id is null if empty string
       active,
       image_file: image_file && image_file.size > 0 ? [image_file] : undefined, // Zod expects FileList-like array
-      business_id, // Add business_id to the data for validation
     };
 
-    const validatedData = productFormSchema.extend({ business_id: ZodUUID }).parse(productData);
+    const validatedData = productFormSchema.parse(productData);
 
     let imageUrl: string | null = null;
     const newProductId: string = uuidv4(); // Generate product ID early for image path
@@ -96,7 +87,6 @@ export async function POST(req: Request) {
       .from('products')
       .insert({
         id: newProductId, // Use pre-generated ID
-        business_id: validatedData.business_id as string, // Ensure it's string
         name: validatedData.name,
         description: validatedData.description,
         price: validatedData.price,

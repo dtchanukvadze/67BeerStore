@@ -33,7 +33,6 @@ interface ProductFormProps {
   initialData?: ProductFormCombined | null;
   onSubmit: SubmitHandler<ProductFormValues>;
   isLoading: boolean;
-  businessId?: string;
 }
 
 export default function ProductForm({

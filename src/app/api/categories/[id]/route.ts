@@ -2,12 +2,10 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import { ZodUUID } from '@/lib/validations/common';
 
 const categoryUpdateSchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100, 'Category name cannot exceed 100 characters').optional(),
   active: z.boolean().optional(),
-  business_id: ZodUUID, // Required for security/ownership check
 });
 
 // GET /api/categories/[id]
@@ -15,19 +13,11 @@ const categoryUpdateSchema = z.object({
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createServerSupabaseClient();
   const { id: categoryId } = await params;
-  const { searchParams } = new URL(req.url);
-  const businessId = searchParams.get('businessId');
-
-  if (!businessId) {
-    return NextResponse.json({ message: 'Business ID is required.' }, { status: 400 });
-  }
-
   try {
     const { data: category, error } = await supabase
       .from('categories')
       .select('*')
       .eq('id', categoryId)
-      .eq('business_id', businessId)
       .single();
 
     if (error) {
@@ -52,13 +42,10 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     const body = await req.json();
     const validatedData = categoryUpdateSchema.parse(body);
 
-    const { business_id, ...updatePayload } = validatedData; // Extract business_id for query
-
     const { data: updatedCategory, error } = await supabase
       .from('categories')
       .update(updatePayload)
       .eq('id', categoryId)
-      .eq('business_id', business_id) // Ensure ownership
       .select()
       .single();
 
@@ -85,20 +72,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const supabase = await createServerSupabaseClient();
   const { id: categoryId } = await params;
-  const { searchParams } = new URL(req.url);
-  const businessId = searchParams.get('businessId');
-
-  if (!businessId) {
-    return NextResponse.json({ message: 'Business ID is required.' }, { status: 400 });
-  }
-
   try {
     // Check if any products are associated with this category
     const { count, error: productCountError } = await supabase
       .from('products')
       .select('id', { count: 'exact' })
       .eq('category_id', categoryId)
-      .eq('business_id', businessId)
       .limit(1); // We only need to know if at least one exists
 
     if (productCountError) {
@@ -115,8 +94,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
     const { error } = await supabase
       .from('categories')
       .delete()
-      .eq('id', categoryId)
-      .eq('business_id', businessId); // Ensure ownership
+      .eq('id', categoryId);
 
     if (error) {
       console.error('Error deleting category:', error);

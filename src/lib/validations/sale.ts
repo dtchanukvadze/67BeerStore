@@ -9,7 +9,6 @@ export const saleItemSchema = z.object({
 });
 
 export const completeSaleSchema = z.object({
-  business_id: ZodUUID,
   payment_method: z.enum(['cash', 'card', 'bank_transfer'], { // required_error goes here
     errorMap: (issue, ctx) => {
       if (issue.code === z.ZodIssueCode.invalid_enum_value) {

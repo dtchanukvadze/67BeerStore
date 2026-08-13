@@ -10,7 +10,6 @@ export type Category = Tables<'categories'>;
 export type ExpenseCategory = Tables<'expense_categories'>;
 
 // For forms, client-side data
-export type ProductFormCombined = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at' | 'business_id'> & {
+export type ProductFormCombined = Omit<Tables<'products'>, 'id' | 'created_at' | 'updated_at'> & {
   image_file?: FileList; // For file input
-  business_id: string; // Ensure business_id is explicitly handled
 };
